@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home Support Plan — Vridhi</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+{% include "partials/_app_header.html" %}
+
+<div class="app-shell">
+  {% include "partials/_parent_sidebar.html" %}
+
+  <main class="app-main">
+    <div class="page-head">
+      <div>
+        <h1>Home Support Plan</h1>
+        <div class="sub">Learning profile, do's & don'ts, and a weekly plan</div>
+      </div>
+    </div>
+
+    <div id="offlineNote" class="banner banner-ok" style="display:none;">
+      Showing demo data — the Django API isn't reachable right now.
+    </div>
+
+    <div id="riskBanner" class="banner banner-alert" style="display:none;"></div>
+
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="card-title">Strongest subject</div>
+        <div class="stat-value" id="strongSubject" style="margin-top:8px;">—</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Needs the most support</div>
+        <div class="stat-value" id="weakSubject" style="margin-top:8px;">—</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Average sleep</div>
+        <div class="stat-value" id="avgSleep" style="margin-top:8px;">—</div>
+      </div>
+    </div>
+
+    <div class="card mt-24">
+      <div class="card-title">Learning Style Note</div>
+      <p class="mt-8" id="styleNote"></p>
+    </div>
+
+    <div class="grid grid-2 mt-24">
+      <div class="card">
+        <div class="card-title">Do</div>
+        <ul class="list-clean" id="doList"></ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Don't</div>
+        <ul class="list-clean" id="dontList"></ul>
+      </div>
+    </div>
+
+    <div class="card mt-24">
+      <div class="card-title">Weekly Home Plan</div>
+      <table class="plan-table">
+        <thead><tr><th>Day</th><th>Focus</th><th>Activity</th></tr></thead>
+        <tbody id="planRows"></tbody>
+      </table>
+    </div>
+
+    <div class="card mt-24" style="background:var(--sky-soft); border-color:#c7dbe6;">
+      <div class="card-title" style="color:var(--sky);">Mentor Tip</div>
+      <p class="mt-8" id="mentorTip" style="color:var(--ink);"></p>
+    </div>
+  </main>
+</div>
+
+<script src="/static/js/app.js"></script>
+<script>
+(async function () {
+  const data = await fetchHomeSupport(getSelectedStudentId());
+  if (data._offline) document.getElementById('offlineNote').style.display = 'flex';
+
+  const p = data.learning_profile;
+  document.getElementById('strongSubject').textContent = p.strongest_subject || '—';
+  document.getElementById('weakSubject').textContent = p.weakest_subject || '—';
+  document.getElementById('avgSleep').textContent = `${p.average_sleep_hours} hrs`;
+  document.getElementById('styleNote').textContent = p.learning_style_note;
+
+  if (data.risk_alert) {
+    const b = document.getElementById('riskBanner');
+    b.style.display = 'flex';
+    b.innerHTML = `<span>⚠️</span><span>${data.risk_alert}</span>`;
+  }
+
+  const doItems = data.do_and_dont.filter((d) => d.type === 'do');
+  const dontItems = data.do_and_dont.filter((d) => d.type === 'dont');
+  document.getElementById('doList').innerHTML = doItems.map((d) => `<li>✅ ${d.text}</li>`).join('') || '<li class="muted">Nothing specific yet.</li>';
+  document.getElementById('dontList').innerHTML = dontItems.map((d) => `<li>🚫 ${d.text}</li>`).join('') || '<li class="muted">Nothing specific yet.</li>';
+
+  document.getElementById('planRows').innerHTML = data.weekly_home_plan.map((row) => `
+    <tr><td><strong>${row.day}</strong></td><td><span class="tag tag-sky">${row.focus}</span></td><td>${row.activity}</td></tr>
+  `).join('');
+
+  document.getElementById('mentorTip').textContent = data.mentor_tip;
+})();
+</script>
+</body>
+</html>

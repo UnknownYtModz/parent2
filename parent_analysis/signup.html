@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create account — Vridhi</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+{% include "partials/_public_header.html" %}
+
+<main class="auth-shell">
+  <div class="auth-card">
+    <h1>Create your account</h1>
+    <p class="sub">Tell us who you are so we can set up the right portal.</p>
+
+    <div class="role-toggle" id="roleToggle">
+      <button type="button" data-role="parent" class="active">Parent</button>
+      <button type="button" data-role="teacher">Teacher</button>
+      <button type="button" data-role="owner">Org Owner</button>
+    </div>
+
+    <form id="signupForm">
+      <div class="field">
+        <label for="name">Full name</label>
+        <input type="text" id="name" placeholder="Your name" required>
+      </div>
+      <div class="field">
+        <label for="school">School</label>
+        <input type="text" id="school" placeholder="Vridhi Demo School" required>
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Create a password" required>
+      </div>
+      <button type="submit" class="btn btn-accent btn-block">Create account</button>
+    </form>
+
+    <p class="auth-foot">Already registered? <a href="signin.html">Sign in</a></p>
+  </div>
+</main>
+
+<script src="/static/js/app.js"></script>
+<script>
+  const toggle = document.getElementById('roleToggle');
+  let selectedRole = 'parent';
+  toggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    selectedRole = btn.dataset.role;
+    toggle.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b === btn));
+  });
+
+  document.getElementById('signupForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    window.location.href = `signin.html?role=${selectedRole}`;
+  });
+</script>
+</body>
+</html>

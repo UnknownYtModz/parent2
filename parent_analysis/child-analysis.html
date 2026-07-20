@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Performance Trajectory — Vridhi</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+{% include "partials/_app_header.html" %}
+
+<div class="app-shell">
+  {% include "partials/_parent_sidebar.html" %}
+
+  <main class="app-main">
+    <div class="page-head">
+      <div>
+        <h1>Performance Trajectory</h1>
+        <div class="sub">How academics and wellbeing move together over time</div>
+      </div>
+      <span class="tag tag-sky" id="trendTag">—</span>
+    </div>
+
+    <div id="offlineNote" class="banner banner-ok" style="display:none;">
+      Showing demo data — the Django API isn't reachable right now.
+    </div>
+
+    <div class="grid grid-3">
+      <div class="card stat">
+        <div class="stat-label">Academic average</div>
+        <div class="stat-value" id="academicAvg">—</div>
+        <span class="tag mt-8" id="academicTrendTag">—</span>
+      </div>
+      <div class="card stat">
+        <div class="stat-label">Wellbeing average</div>
+        <div class="stat-value" id="wellbeingAvg">—</div>
+        <span class="tag mt-8" id="wellbeingTrendTag">—</span>
+      </div>
+      <div class="card stat">
+        <div class="stat-label">Wellbeing ↔ Academic correlation</div>
+        <div class="stat-value" id="corrValue">—</div>
+        <span class="small muted" id="corrNote"></span>
+      </div>
+    </div>
+
+    <div class="card mt-24">
+      <div class="card-title">Subject-by-Subject Trajectory</div>
+      <div class="card-sub">Every assessment, by subject, across the tracked period</div>
+      <div class="chart-box" style="height:320px;"><canvas id="trajectoryChart"></canvas></div>
+    </div>
+
+    <div class="card mt-24">
+      <div class="card-title">Recent Assessments</div>
+      <table class="plan-table">
+        <thead><tr><th>Date</th><th>Subject</th><th>Score</th></tr></thead>
+        <tbody id="assessmentRows"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="/static/js/app.js"></script>
+<script>
+(async function () {
+  const data = await fetchChildProgress(getSelectedStudentId());
+  if (data._offline) document.getElementById('offlineNote').style.display = 'flex';
+
+  document.getElementById('academicAvg').textContent = data.growth_snapshot.academic_average;
+  document.getElementById('wellbeingAvg').textContent = `${data.growth_snapshot.wellbeing_average}/10`;
+  document.getElementById('corrValue').textContent = data.growth_snapshot.wellbeing_academic_correlation;
+
+  const corr = data.growth_snapshot.wellbeing_academic_correlation;
+  document.getElementById('corrNote').textContent = corr >= 0.5 ? 'Strong positive link' : corr <= -0.3 ? 'Inverse relationship' : 'Weak or no link';
+
+  function trendTag(el, trend) {
+    el.textContent = trend === 'up' ? '▲ Trending up' : trend === 'down' ? '▼ Trending down' : '● Flat';
+    el.className = `tag mt-8 ${trend === 'up' ? 'tag-leaf' : trend === 'down' ? 'tag-brick' : 'tag-sky'}`;
+  }
+  trendTag(document.getElementById('academicTrendTag'), data.growth_snapshot.academic_trend);
+  trendTag(document.getElementById('wellbeingTrendTag'), data.growth_snapshot.wellbeing_trend);
+
+  const overallTag = document.getElementById('trendTag');
+  overallTag.textContent = data.growth_snapshot.phase;
+  overallTag.className = `tag ${phaseTagClass(data.growth_snapshot.phase)}`;
+
+  const bySubject = {};
+  data.academic_timeline.forEach((row) => {
+    bySubject[row.subject] = bySubject[row.subject] || [];
+    bySubject[row.subject].push(row);
+  });
+  const subjectColors = { Math: VRIDHI_COLORS.brick, Science: VRIDHI_COLORS.sky, English: VRIDHI_COLORS.leaf, 'Social Studies': VRIDHI_COLORS.marigold };
+  const allDates = [...new Set(data.academic_timeline.map((r) => r.date))].sort();
+
+  new Chart(document.getElementById('trajectoryChart'), {
+    type: 'line',
+    data: {
+      labels: allDates,
+      datasets: Object.keys(bySubject).map((subj) => ({
+        label: subj,
+        data: allDates.map((d) => {
+          const row = bySubject[subj].find((r) => r.date === d);
+          return row ? row.score : null;
+        }),
+        borderColor: subjectColors[subj] || VRIDHI_COLORS.ink,
+        backgroundColor: 'transparent',
+        tension: 0.35,
+        spanGaps: true,
+        pointRadius: 3,
+      })),
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { y: { min: 0, max: 100 } },
+      plugins: { legend: { position: 'bottom' } },
+    },
+  });
+
+  const rows = [...data.academic_timeline].reverse().slice(0, 12);
+  document.getElementById('assessmentRows').innerHTML = rows.map((r) => `
+    <tr><td class="mono small">${r.date}</td><td>${r.subject}</td><td class="mono">${r.score}</td></tr>
+  `).join('');
+})();
+</script>
+</body>
+</html>

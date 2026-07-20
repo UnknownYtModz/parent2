@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parent Impact — Vridhi</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+{% include "partials/_app_header.html" %}
+
+<div class="app-shell">
+  {% include "partials/_parent_sidebar.html" %}
+
+  <main class="app-main">
+    <div class="page-head">
+      <div>
+        <h1>Parent Impact</h1>
+        <div class="sub">Communication effectiveness & activity lift</div>
+      </div>
+    </div>
+
+    <div id="offlineNote" class="banner banner-ok" style="display:none;">
+      Showing demo data — the Django API isn't reachable right now.
+    </div>
+
+    <div id="signalBanner" class="banner banner-ok"></div>
+
+    <div class="grid" style="grid-template-columns: 1fr 2fr; gap:20px;">
+      <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div class="card-sub eyebrow" style="align-self:flex-start;">Parent Involvement Score</div>
+        <div id="impactRing" class="mt-8"></div>
+        <div class="small muted mt-16" id="bandNote"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Engagement by Activity</div>
+        <div class="card-sub">Total minutes invested per activity type</div>
+        <div class="chart-box"><canvas id="activityChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="grid grid-3 mt-24">
+      <div class="card stat">
+        <div class="stat-label">Total sessions logged</div>
+        <div class="stat-value" id="totalSessions">—</div>
+      </div>
+      <div class="card stat">
+        <div class="stat-label">Total engagement minutes</div>
+        <div class="stat-value" id="totalMinutes">—</div>
+      </div>
+      <div class="card stat">
+        <div class="stat-label">Communication effectiveness</div>
+        <span class="tag mt-8" id="commTag">—</span>
+      </div>
+    </div>
+
+    <div class="card mt-24">
+      <div class="card-title">Activity Breakdown</div>
+      <table class="plan-table">
+        <thead><tr><th>Activity</th><th>Sessions</th><th>Total minutes</th></tr></thead>
+        <tbody id="activityRows"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="/static/js/app.js"></script>
+<script>
+(async function () {
+  const data = await fetchParentImpact(getSelectedStudentId());
+  if (data._offline) document.getElementById('offlineNote').style.display = 'flex';
+
+  renderGrowthRing(document.getElementById('impactRing'), data.parent_impact_score, 'Impact Score');
+  document.getElementById('bandNote').textContent = `Optimal band: ${data.optimal_band.low}–${data.optimal_band.high}`;
+  document.getElementById('totalSessions').textContent = data.total_sessions;
+  document.getElementById('totalMinutes').textContent = `${data.total_engagement_minutes} min`;
+
+  const commTag = document.getElementById('commTag');
+  const commMap = { positive: ['tag-leaf', 'Positive'], stable: ['tag-sky', 'Stable'], declining: ['tag-brick', 'Declining'], insufficient_data: ['tag-marigold', 'Not enough data'] };
+  const [cls, label] = commMap[data.communication_effectiveness] || ['tag-sky', data.communication_effectiveness];
+  commTag.textContent = label;
+  commTag.className = `tag mt-8 ${cls}`;
+
+  const banner = document.getElementById('signalBanner');
+  const inBand = data.parent_impact_score >= data.optimal_band.low && data.parent_impact_score <= data.optimal_band.high;
+  banner.className = `banner ${inBand ? 'banner-ok' : 'banner-alert'}`;
+  banner.innerHTML = `<span>${inBand ? '✅' : '⚠️'}</span><span>${data.behavior_signal}</span>`;
+
+  new Chart(document.getElementById('activityChart'), {
+    type: 'bar',
+    data: {
+      labels: data.impact_by_activity.map((a) => activityLabel(a.activity_type)),
+      datasets: [{
+        label: 'Minutes',
+        data: data.impact_by_activity.map((a) => a.total_minutes),
+        backgroundColor: VRIDHI_COLORS.marigold,
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+    },
+  });
+
+  document.getElementById('activityRows').innerHTML = data.impact_by_activity.map((a) => `
+    <tr><td>${activityLabel(a.activity_type)}</td><td class="mono">${a.sessions}</td><td class="mono">${a.total_minutes}</td></tr>
+  `).join('');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — Vridhi</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+{% include "partials/_public_header.html" %}
+
+<main class="auth-shell">
+  <div class="auth-card">
+    <h1>Welcome back</h1>
+    <p class="sub">Sign in to see the latest growth signals.</p>
+
+    <div class="role-toggle" id="roleToggle">
+      <button type="button" data-role="parent" class="active">Parent</button>
+      <button type="button" data-role="teacher">Teacher</button>
+      <button type="button" data-role="owner">Org Owner</button>
+    </div>
+
+    <form id="signinForm">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+    </form>
+
+    <p class="auth-foot">New to Vridhi? <a href="signup.html">Create an account</a></p>
+  </div>
+</main>
+
+<script src="/static/js/app.js"></script>
+<script>
+  const destinations = {
+    parent: 'dashboard.html',
+    teacher: 'teacher-dashboard.html',
+    owner: 'owner-dashboard.html',
+  };
+
+  const toggle = document.getElementById('roleToggle');
+  let selectedRole = new URLSearchParams(window.location.search).get('role') || 'parent';
+  if (!destinations[selectedRole]) selectedRole = 'parent';
+
+  function paintToggle() {
+    toggle.querySelectorAll('button').forEach((b) => {
+      b.classList.toggle('active', b.dataset.role === selectedRole);
+    });
+  }
+  paintToggle();
+
+  toggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    selectedRole = btn.dataset.role;
+    paintToggle();
+  });
+
+  document.getElementById('signinForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    // Client-side role routing — no server-side auth in this demo build.
+    window.location.href = destinations[selectedRole];
+  });
+</script>
+</body>
+</html>

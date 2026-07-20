@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Portal — Vridhi</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+{% include "partials/_app_header.html" %}
+
+<div class="wrap" style="padding-top:32px; padding-bottom:60px;">
+  <div class="page-head">
+    <div>
+      <h1>Teacher Portal</h1>
+      <div class="sub">Class 8B · Growth signals for every student in your roster</div>
+    </div>
+  </div>
+
+  <div id="offlineNote" class="banner banner-ok" style="display:none;">
+    Showing demo data — the Django API isn't reachable right now.
+  </div>
+
+  <div class="grid grid-3">
+    <div class="card stat">
+      <div class="stat-label">Students tracked</div>
+      <div class="stat-value" id="studentCount">—</div>
+    </div>
+    <div class="card stat">
+      <div class="stat-label">Class academic average</div>
+      <div class="stat-value" id="classAvg">—</div>
+    </div>
+    <div class="card stat">
+      <div class="stat-label">Students needing attention</div>
+      <div class="stat-value" id="atRiskCount">—</div>
+    </div>
+  </div>
+
+  <div class="card mt-24">
+    <div class="card-title">Roster</div>
+    <div class="card-sub">Tap a student to open their full growth overview</div>
+    <table class="plan-table">
+      <thead><tr><th>Student</th><th>Grade</th><th>Growth Score</th><th>Phase</th><th>Wellbeing</th></tr></thead>
+      <tbody id="rosterRows"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="/static/js/app.js"></script>
+<script>
+(async function () {
+  const students = await fetchStudents();
+  document.getElementById('studentCount').textContent = students.length;
+
+  const rows = [];
+  let academicSum = 0;
+  let atRisk = 0;
+  let offline = false;
+
+  for (const s of students) {
+    const report = await fetchChildProgress(s.id);
+    if (report._offline) offline = true;
+    academicSum += report.growth_snapshot.academic_average;
+    if (report.growth_snapshot.phase === 'At Risk' || report.growth_snapshot.phase === 'Needs Support') atRisk += 1;
+
+    rows.push(`
+      <tr>
+        <td><a href="dashboard.html" style="text-decoration:none; color:var(--ink); font-weight:600;">${s.name}</a></td>
+        <td>Grade ${s.grade}${s.class}</td>
+        <td class="mono">${report.growth_snapshot.growth_score}</td>
+        <td><span class="tag ${phaseTagClass(report.growth_snapshot.phase)}">${report.growth_snapshot.phase}</span></td>
+        <td class="mono">${report.growth_snapshot.wellbeing_average}/10</td>
+      </tr>
+    `);
+  }
+
+  if (offline) document.getElementById('offlineNote').style.display = 'flex';
+  document.getElementById('classAvg').textContent = students.length ? Math.round((academicSum / students.length) * 10) / 10 : '—';
+  document.getElementById('atRiskCount').textContent = atRisk;
+  document.getElementById('rosterRows').innerHTML = rows.join('') || '<tr><td colspan="5" class="muted">No students yet.</td></tr>';
+})();
+</script>
+</body>
+</html>

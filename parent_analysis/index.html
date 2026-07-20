@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vridhi — Growth Intelligence for Schools & Families</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+{% include "partials/_public_header.html" %}
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">Growth intelligence, made human</div>
+      <h1>Every child's growth, seen clearly by everyone who cares for them.</h1>
+      <p class="lede">Vridhi (वृद्धि, "growth") turns scattered grades, mood check-ins and home
+        routines into one honest picture — so schools, teachers and parents can act
+        together, not in the dark.</p>
+      <div class="hero-actions">
+        <a href="signup.html" class="btn btn-accent">Start free for your school</a>
+        <a href="signin.html" class="btn btn-ghost">Sign in</a>
+      </div>
+
+      <div class="role-select">
+        <a href="signin.html?role=owner" class="role-card">
+          <div class="role-icon">🏫</div>
+          <div class="role-name">Org Owner</div>
+          <div class="role-desc">School-wide growth trends & rollout controls.</div>
+        </a>
+        <a href="signin.html?role=teacher" class="role-card">
+          <div class="role-icon">📋</div>
+          <div class="role-name">Teacher</div>
+          <div class="role-desc">Class-level performance & wellbeing signals.</div>
+        </a>
+        <a href="signin.html?role=parent" class="role-card">
+          <div class="role-icon">🌱</div>
+          <div class="role-name">Student / Parent</div>
+          <div class="role-desc">Your child's growth story & home support plan.</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="card" style="width:100%; max-width:360px;">
+        <div class="card-sub eyebrow" style="margin-bottom:18px;">Live growth snapshot</div>
+        <div id="heroRing"></div>
+        <div class="grid grid-2 mt-24">
+          <div class="stat">
+            <div class="stat-value mono" style="font-size:1.3rem;">68.8</div>
+            <div class="stat-label">Academic average</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value mono" style="font-size:1.3rem;">6.3<span style="font-size:0.9rem;">/10</span></div>
+            <div class="stat-label">Wellbeing index</div>
+          </div>
+        </div>
+        <div class="mt-16"><span class="tag tag-sky">Steady Growth phase</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">How it fits together</div>
+      <h2>Three reports, one shared truth.</h2>
+      <p>Each portal reads the same growth engine — nobody works from a different set of facts.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="card-title">Performance Trajectory</div>
+        <div class="card-sub">Academic scores mapped against wellbeing, so a dip is understood, not just noticed.</div>
+        <span class="tag tag-leaf">Report 1</span>
+      </div>
+      <div class="card">
+        <div class="card-title">Parent Impact</div>
+        <div class="card-sub">Which home activities actually move the needle, and how much involvement is enough.</div>
+        <span class="tag tag-marigold">Report 2</span>
+      </div>
+      <div class="card">
+        <div class="card-title">Home Support Plan</div>
+        <div class="card-sub">A concrete weekly plan, written in do's and don'ts, not vague advice.</div>
+        <span class="tag tag-sky">Report 3</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <span>© 2026 Vridhi Parent Analytics · Demo build</span>
+  <span class="mono small">v1.0 · Django + DRF</span>
+</footer>
+
+<script src="/static/js/app.js"></script>
+<script>
+  const ring = document.getElementById('heroRing');
+  if (ring) renderGrowthRing(ring, 67.1, 'Growth Score');
+</script>
+</body>
+</html>
